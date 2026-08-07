@@ -3,3 +3,5 @@ python-dotenv
 requests
 schedule
 beautifulsoup4
+pytest
+pytest-mock
