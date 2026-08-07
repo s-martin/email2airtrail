@@ -1,0 +1,5 @@
+imaplib2
+python-dotenv
+requests
+schedule
+beautifulsoup4
