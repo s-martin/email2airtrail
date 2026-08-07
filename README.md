@@ -1,5 +1,7 @@
 # Email2AirTrail
 
+![GitHub Container Registry](https://img.shields.io/badge/Container%20Registry-ghcr.io-blue)
+
 A **Docker-based daemon** that monitors an IMAP inbox for emails from configured senders, extracts flight information, and inserts it into an **AirTrail** instance.
 
 This daemon is designed to:
@@ -36,14 +38,7 @@ Before you begin, ensure you have the following:
 Clone the repository or download the project files to your local machine:
 
 ```bash
-git clone <repository-url>  # If available
-```
-
-Or extract the provided ZIP file:
-
-```bash
-unzip airtrail-daemon_final.zip -d airtrail-daemon
-cd airtrail-daemon
+git clone https://github.com/s-martin/email2airtrail
 ```
 
 ### 2. Project Structure
@@ -121,6 +116,35 @@ docker-compose up -d --build
 
 The --build flag ensures that the Docker image is rebuilt.
 The -d flag runs the container in detached mode (in the background).
+
+### 1a. Use a prebuilt image from GitHub Container Registry
+
+If you want to run the published image instead of building locally, use:
+
+```bash
+docker pull ghcr.io/s-martin/email2airtrail:latest
+docker run --rm -d --name email2airtrail ghcr.io/s-martin/email2airtrail:latest
+```
+
+Example Compose file using the published image:
+
+```yaml
+services:
+  airtrail-daemon:
+    image: ghcr.io/s-martin/email2airtrail:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./logs:/app/logs
+```
+
+You can also push the image manually with:
+
+```bash
+docker build -t ghcr.io/s-martin/email2airtrail:latest .
+docker push ghcr.io/s-martin/email2airtrail:latest
+```
 
 ### 2. Check Logs
 
