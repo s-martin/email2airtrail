@@ -41,7 +41,17 @@ Clone the repository or download the project files to your local machine:
 git clone https://github.com/s-martin/email2airtrail
 ```
 
-### 2. Project Structure
+### 2. Download the Compose File and Example Environment
+
+If you want to fetch the example compose file and environment template directly from GitHub, you can use:
+
+```bash
+wget -O docker-compose.yml https://raw.githubusercontent.com/s-martin/email2airtrail/main/docker-compose.yml
+wget -O eample.env https://raw.githubusercontent.com/s-martin/email2airtrail/main/eample.env
+mv eample.env .env
+```
+
+### 3. Project Structure
 
 The project has the following structure:
 
