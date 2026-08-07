@@ -157,7 +157,7 @@ tail -f logs/daemon.log
 Or directly from the Docker container:
 
 ```bash
-docker logs -f airtrail-daemon_airtrail-daemon_1
+docker logs -f email2airtrail_email2airtrail_1
 ```
 
 ### 3. Stop the Daemon
