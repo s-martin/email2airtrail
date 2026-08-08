@@ -37,8 +37,8 @@ If you want to fetch the example compose file and environment template directly 
 
 ```bash
 wget -O docker-compose.yml https://raw.githubusercontent.com/s-martin/email2airtrail/main/docker-compose.yml
-wget -O eample.env https://raw.githubusercontent.com/s-martin/email2airtrail/main/eample.env
-mv eample.env .env
+wget -O eample.env https://raw.githubusercontent.com/s-martin/email2airtrail/main/example.env
+mv example.env .env
 ```
 
 ### 3. Project Structure
@@ -54,7 +54,7 @@ airtrail-daemon/
 ├── config.py             # Configuration settings
 ├── daemon.py             # Main daemon script
 ├── logs/                 # Directory for log files
-└── patterns/             # Directory for regex patterns
+└── pattern/             # Directory for regex patterns
     ├── __init__.py       # Dynamic pattern loading
     ├── bcd_travel.py     # Regex pattern for BCD Travel emails
     └── ryanair.py        # Regex pattern for Ryanair emails (example)
@@ -247,11 +247,11 @@ The main script for the daemon. It:
 patterns/__init__.py
 - Dynamically loads the configured regex pattern for flight information extraction.
 
-### patterns/bcd_travel.py
+### pattern/bcd_travel.py
 
 Contains regex patterns for extracting flight information from BCD Travel emails.
 
-### patterns/ryanair.py
+### pattern/ryanair.py
 
 Contains regex patterns for extracting flight information from Ryanair emails (example).
 
