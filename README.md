@@ -2,24 +2,14 @@
 
 ![GitHub Container Registry](https://img.shields.io/badge/Container%20Registry-ghcr.io-blue)
 
-A **Docker-based daemon** that monitors an IMAP inbox for emails from configured senders, extracts flight information, and inserts it into an **AirTrail** instance.
-
-This daemon is designed to:
-
-- Monitor an IMAP inbox for new emails from specified senders.
-- Extract flight details such as flight number, departure/arrival times, airport codes, class, booking reference, aircraft, and seat.
-- Insert the extracted flight information into an **AirTrail** instance via its API.
-- Avoid duplicate entries by checking if the flight already exists in AirTrail.
-- Mark processed emails as read.
-- Support multiple email senders for monitoring.
+A **Docker-based daemon** that monitors an IMAP inbox for flight information emails and inserts them into an **[AirTrail](https://github.com/johanohly/AirTrail)** instance. 
 
 ## Features
 
 - **Email Monitoring**: Continuously checks an IMAP inbox for new emails from configured senders.
-- **Flight Information Extraction**: Uses regex patterns to extract flight details from emails.
-- **AirTrail Integration**: Sends extracted flight data to an AirTrail instance using its API.
+- **Flight Information Extraction**: Extract flight details such as flight number, departure/arrival times, airport codes, class, booking reference, aircraft, and seat from emails.
+- **AirTrail Integration**: Imports extracted flight data to an AirTrail instance using its API.
 - **Duplicate Check**: Ensures that the same flight is not inserted multiple times.
-- **Mark as Read**: Marks emails as read after processing.
 - **Configurable Senders**: Allows monitoring emails from multiple senders.
 - **Dynamic Pattern Loading**: Supports different email formats by loading the appropriate regex pattern.
 
@@ -188,6 +178,8 @@ Example: Adding a New Pattern
 Create a new file in the patterns/ directory, e.g., lufthansa.py.
 Define the FLIGHT_BLOCK_PATTERN and TABLE_ROW_PATTERN for the new email format.
 
+TODO
+
 ```python
 import re
 
@@ -265,6 +257,8 @@ Contains regex patterns for extracting flight information from Ryanair emails (e
 
 ## Troubleshooting
 
+TODO
+
 | Issue | Solution |
 | ----- | -------- |
 | Docker container fails to start | Check the .env file for missing or incorrect values. Ensure Docker is running. |
@@ -273,8 +267,6 @@ Contains regex patterns for extracting flight information from Ryanair emails (e
 | AirTrail API errors | Verify the AIRTRAIL_API_URL and AIRTRAIL_API_KEY in the .env file. |
 | Date or time parsing errors | Adjust the datetime.strptime format in daemon.py to match your email's date format. |
 | Permission issues with logs | Ensure the logs/ directory exists and has write permissions. |
-
-The regex patterns in patterns/bcd_travel.py are designed to match this format.
 
 ## Contributions
 
