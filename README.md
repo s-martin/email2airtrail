@@ -1,6 +1,6 @@
 # Email2AirTrail
 
-![GitHub Container Registry](https://img.shields.io/badge/Container%20Registry-ghcr.io-blue)
+![GitHub Container Registry](https://img.shields.io/badge/Container%20Registry-ghcr.io-blue) [![Tests](https://github.com/s-martin/email2airtrail/actions/workflows/tests.yml/badge.svg)](https://github.com/s-martin/email2airtrail/actions/workflows/tests.yml) [![CodeQL](https://github.com/s-martin/email2airtrail/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/s-martin/email2airtrail/actions/workflows/github-code-scanning/codeql)
 
 A **Docker-based daemon** that monitors an IMAP inbox for flight information emails and inserts them into an **[AirTrail](https://github.com/johanohly/AirTrail)** instance. 
 
