@@ -5,7 +5,7 @@ import requests
 import schedule
 import time
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 from config import Config
 from pattern import get_flight_info_pattern, get_table_row_pattern
@@ -52,14 +52,19 @@ def extract_flight_info(email_body):
 
         # Convert date and time to ISO format
         try:
-            departure_datetime = datetime.strptime(
+            departure_dt = datetime.strptime(
                 f"{flight_info['date']} {flight_info['departure_time']}",
                 "%d %b %Y %H:%M"
-            ).isoformat()
-            arrival_datetime = datetime.strptime(
+            )
+            arrival_dt = datetime.strptime(
                 f"{flight_info['date']} {flight_info['arrival_time']}",
                 "%d %b %Y %H:%M"
-            ).isoformat()
+            )
+            # Advance arrival by one day for overnight flights
+            if arrival_dt < departure_dt:
+                arrival_dt += timedelta(days=1)
+            departure_datetime = departure_dt.isoformat()
+            arrival_datetime = arrival_dt.isoformat()
         except ValueError:
             logger.error(
                 f"Error parsing date or time for flight {flight_info.get('flight_number', 'Unknown')}"
