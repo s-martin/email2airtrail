@@ -67,7 +67,7 @@ Edit the .env file to configure the daemon according to your environment. Here i
 ```ini
 # Email Configuration (IMAP)
 
-IMAP_SERVER=imap.bcdtravel.com
+IMAP_SERVER=imap.email.com
 IMAP_PORT=993
 EMAIL_ADDRESS=your@email.com
 EMAIL_PASSWORD=your-password
@@ -87,7 +87,7 @@ FLIGHT_PATTERN_FILE=bcd_travel
 
 # Email Senders (comma-separated)
 
-EMAIL_SENDERS=hensoldt@bcdtravel.de,bcdtravel@example.com
+EMAIL_SENDERS=info@bcdtravel.de,bcdtravel@example.com
 ```
 
 #### Environment Variables Description
