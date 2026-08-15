@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 from bs4 import BeautifulSoup
 from config import Config
-from pattern import get_flight_info_pattern, TABLE_ROW_PATTERN
+from pattern import get_flight_info_pattern, get_table_row_pattern
 
 # Logging configuration
 logging.basicConfig(
@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Load the flight info pattern dynamically
 FLIGHT_BLOCK_PATTERN = get_flight_info_pattern()
+TABLE_ROW_PATTERN = get_table_row_pattern()
 
 
 def extract_text_from_html(html):
