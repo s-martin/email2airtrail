@@ -23,3 +23,10 @@ class Config:
 
     # Email senders (comma-separated)
     EMAIL_SENDERS = [s for s in (s.strip() for s in os.getenv("EMAIL_SENDERS", "").split(",")) if s]
+
+    @classmethod
+    def validate(cls):
+        required = ["IMAP_SERVER", "EMAIL_ADDRESS", "AIRTRAIL_API_URL", "AIRTRAIL_API_KEY"]
+        missing = [var for var in required if not getattr(cls, var)]
+        if missing:
+            raise ValueError(f"Missing required environment variables: {missing}")
