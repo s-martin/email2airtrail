@@ -74,3 +74,79 @@ class TestConfig:
             import config as cfg_module
             importlib.reload(cfg_module)
             assert cfg_module.Config.AIRTRAIL_API_URL == "http://api.example.com"
+
+
+class TestConfigValidate:
+    def _make_config(self, env_overrides):
+        with patch.dict(os.environ, env_overrides, clear=False):
+            import importlib
+            import config as cfg_module
+            importlib.reload(cfg_module)
+            return cfg_module.Config
+
+    def test_validate_passes_when_all_required_vars_set(self):
+        env = {
+            "IMAP_SERVER": "imap.example.com",
+            "EMAIL_ADDRESS": "user@example.com",
+            "AIRTRAIL_API_URL": "http://api.example.com",
+            "AIRTRAIL_API_KEY": "key123",
+        }
+        cfg = self._make_config(env)
+        cfg.validate()  # Should not raise
+
+    def test_validate_raises_when_imap_server_missing(self):
+        env = {
+            "EMAIL_ADDRESS": "user@example.com",
+            "AIRTRAIL_API_URL": "http://api.example.com",
+            "AIRTRAIL_API_KEY": "key123",
+        }
+        cfg = self._make_config(env)
+        cfg.IMAP_SERVER = None
+        with pytest.raises(ValueError, match="IMAP_SERVER"):
+            cfg.validate()
+
+    def test_validate_raises_when_email_address_missing(self):
+        env = {
+            "IMAP_SERVER": "imap.example.com",
+            "AIRTRAIL_API_URL": "http://api.example.com",
+            "AIRTRAIL_API_KEY": "key123",
+        }
+        cfg = self._make_config(env)
+        cfg.EMAIL_ADDRESS = None
+        with pytest.raises(ValueError, match="EMAIL_ADDRESS"):
+            cfg.validate()
+
+    def test_validate_raises_when_airtrail_api_url_missing(self):
+        env = {
+            "IMAP_SERVER": "imap.example.com",
+            "EMAIL_ADDRESS": "user@example.com",
+            "AIRTRAIL_API_KEY": "key123",
+        }
+        cfg = self._make_config(env)
+        cfg.AIRTRAIL_API_URL = None
+        with pytest.raises(ValueError, match="AIRTRAIL_API_URL"):
+            cfg.validate()
+
+    def test_validate_raises_when_airtrail_api_key_missing(self):
+        env = {
+            "IMAP_SERVER": "imap.example.com",
+            "EMAIL_ADDRESS": "user@example.com",
+            "AIRTRAIL_API_URL": "http://api.example.com",
+        }
+        cfg = self._make_config(env)
+        cfg.AIRTRAIL_API_KEY = None
+        with pytest.raises(ValueError, match="AIRTRAIL_API_KEY"):
+            cfg.validate()
+
+    def test_validate_error_message_lists_all_missing(self):
+        env = {
+            "IMAP_SERVER": "imap.example.com",
+            "EMAIL_ADDRESS": "user@example.com",
+        }
+        cfg = self._make_config(env)
+        cfg.AIRTRAIL_API_URL = None
+        cfg.AIRTRAIL_API_KEY = None
+        with pytest.raises(ValueError) as exc_info:
+            cfg.validate()
+        assert "AIRTRAIL_API_URL" in str(exc_info.value)
+        assert "AIRTRAIL_API_KEY" in str(exc_info.value)

@@ -229,6 +229,7 @@ def run_daemon():
 schedule.every(Config.CHECK_INTERVAL_MINUTES).minutes.do(run_daemon)
 
 if __name__ == "__main__":
+    Config.validate()
     run_daemon()  # Run immediately
     while True:
         schedule.run_pending()

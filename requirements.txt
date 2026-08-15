@@ -1,7 +1,6 @@
-imaplib2
-python-dotenv
-requests
-schedule
-beautifulsoup4
-pytest
-pytest-mock
+python-dotenv==1.0.1
+requests==2.32.3
+schedule==1.2.2
+beautifulsoup4==4.12.3
+pytest==8.3.4
+pytest-mock==3.14.0

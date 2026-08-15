@@ -17,6 +17,6 @@ RUN mkdir -p logs
 ENV PYTHONUNBUFFERED=1
 
 HEALTHCHECK --interval=60s --timeout=10s --start-period=5s --retries=3 \
-    CMD test -f /app/logs/daemon.log || exit 1
+    CMD test "$(find /app/logs/daemon.log -mmin -5 2>/dev/null)" != ""
 
 CMD ["python", "daemon.py"]
