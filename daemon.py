@@ -33,7 +33,7 @@ def extract_text_from_html(html):
 
 
 def extract_flight_info(email_body):
-    """Extract flight information from BCD Travel emails."""
+    """Extract flight information from an email body."""
     # Search for flight blocks
     flight_blocks = FLIGHT_BLOCK_PATTERN.finditer(email_body)
     flights = []
@@ -92,7 +92,8 @@ def flight_exists(flight_number, departure_time):
     try:
         response = requests.get(
             f"{Config.AIRTRAIL_API_URL}?flightNumber={flight_number}&departureTime={departure_time}",
-            headers=headers
+            headers=headers,
+            timeout=10,
         )
         if response.status_code == 200:
             flights = response.json()
@@ -119,7 +120,8 @@ def send_to_airtrail(flight_data):
         response = requests.post(
             Config.AIRTRAIL_API_URL,
             json=flight_data,
-            headers=headers
+            headers=headers,
+            timeout=10,
         )
         if response.status_code in (200, 201):
             logger.info(
