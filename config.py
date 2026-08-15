@@ -22,4 +22,4 @@ class Config:
     FLIGHT_PATTERN_FILE = os.getenv("FLIGHT_PATTERN_FILE", "bcd_travel")
 
     # Email senders (comma-separated)
-    EMAIL_SENDERS = os.getenv("EMAIL_SENDERS", "").split(",")
+    EMAIL_SENDERS = [s for s in (s.strip() for s in os.getenv("EMAIL_SENDERS", "").split(",")) if s]

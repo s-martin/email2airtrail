@@ -52,7 +52,14 @@ class TestConfig:
             import importlib
             import config as cfg_module
             importlib.reload(cfg_module)
-            assert cfg_module.Config.EMAIL_SENDERS == [""]
+            assert cfg_module.Config.EMAIL_SENDERS == []
+
+    def test_email_senders_whitespace_only(self):
+        with patch.dict(os.environ, {"EMAIL_SENDERS": "  , , "}, clear=False):
+            import importlib
+            import config as cfg_module
+            importlib.reload(cfg_module)
+            assert cfg_module.Config.EMAIL_SENDERS == []
 
     def test_reads_imap_server_from_env(self):
         with patch.dict(os.environ, {"IMAP_SERVER": "imap.test.com"}, clear=False):
