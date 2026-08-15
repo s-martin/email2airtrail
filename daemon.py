@@ -187,6 +187,7 @@ def fetch_emails():
             if flights:
                 logger.info(f"Flight info found: {flights}")
 
+                all_succeeded = True
                 for flight in flights:
                     # Check whether the flight already exists
                     if flight_exists(flight["flightNumber"], flight["departureTime"]):
@@ -194,11 +195,15 @@ def fetch_emails():
                     else:
                         # Insert the flight into AirTrail
                         if send_to_airtrail(flight):
-                            # Mark the email as read
-                            mail.store(email_id, '+FLAGS', '\\Seen')
-                            logger.info(f"Email with flight {flight['flightNumber']} marked as read.")
+                            logger.info(f"Flight {flight['flightNumber']} inserted into AirTrail.")
                         else:
                             logger.error(f"Flight {flight['flightNumber']} could not be inserted into AirTrail.")
+                            all_succeeded = False
+
+                if all_succeeded:
+                    # Mark the email as read only after all flights have been processed
+                    mail.store(email_id, '+FLAGS', '\\Seen')
+                    logger.info("Email marked as read.")
 
         mail.close()
         mail.logout()
