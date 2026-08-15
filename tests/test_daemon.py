@@ -190,6 +190,14 @@ class TestFlightExists:
         with patch("daemon.requests.get", return_value=self._make_response(200, [])):
             assert daemon.flight_exists("LH100", "2024-01-15T10:30:00") is False
 
+    def test_sends_bearer_api_key_header(self):
+        flights = [{"flightNumber": "LH100", "departureTime": "2024-01-15T10:30:00"}]
+        with patch("daemon.requests.get", return_value=self._make_response(200, flights)) as mock_get:
+            daemon.flight_exists("LH100", "2024-01-15T10:30:00")
+            headers = mock_get.call_args[1]["headers"]
+        expected = f"Bearer {daemon.Config.AIRTRAIL_API_KEY}"
+        assert headers.get("Authorization") == expected
+
 
 # ── send_to_airtrail ─────────────────────────────────────────────────────────
 
@@ -240,3 +248,9 @@ class TestSendToAirtrail:
             daemon.send_to_airtrail(SAMPLE_FLIGHT)
             posted_data = mock_post.call_args[1]["json"]
         assert posted_data["flightNumber"] == "LH100"
+    def test_sends_bearer_api_key_header(self):
+        with patch("daemon.requests.post", return_value=self._make_response(201)) as mock_post:
+            daemon.send_to_airtrail(SAMPLE_FLIGHT)
+            headers = mock_post.call_args[1]["headers"]
+        expected = f"Bearer {daemon.Config.AIRTRAIL_API_KEY}"
+        assert headers.get("Authorization") == expected
