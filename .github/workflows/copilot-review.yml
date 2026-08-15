@@ -5,7 +5,6 @@ on:
     types:
       - opened
       - reopened
-      - synchronize
 
 permissions:
   contents: read
@@ -15,4 +14,12 @@ jobs:
   copilot-review:
     runs-on: ubuntu-latest
     steps:
-      - uses: github/copilot-code-review@v1
+      - name: Request Copilot code review
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers \
+            -f "reviewers[]=copilot-pull-request-reviewer[bot]" || true
