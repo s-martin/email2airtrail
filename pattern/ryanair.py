@@ -1,5 +1,9 @@
 import re
 
+# Ryanair emails embed all flight details in a single block; there is no
+# separate summary table, so TABLE_ROW_PATTERN reuses FLIGHT_INFO_PATTERN.
+# It is defined first so FLIGHT_INFO_PATTERN can reference it below.
+
 # Regex pattern for Ryanair emails
 FLIGHT_INFO_PATTERN = re.compile(
     r"Flug:\s*(?P<flight_number>[A-Z0-9]+)\s*"
@@ -12,3 +16,7 @@ FLIGHT_INFO_PATTERN = re.compile(
     r"Flugzeug:\s*(?P<aircraft>[A-Za-z0-9\s]+)\s*"
     r"Sitz:\s*(?P<seat>[A-Z0-9]+)"
 )
+
+# Ryanair has no separate summary table; alias to FLIGHT_INFO_PATTERN.
+FLIGHT_BLOCK_PATTERN = FLIGHT_INFO_PATTERN
+TABLE_ROW_PATTERN = FLIGHT_INFO_PATTERN
