@@ -80,6 +80,30 @@ BCD_EMAIL_BODY = (
     "15 Jan 2024 LH100 FRA MUC 10:30 11:30 Economy ABC123\n"
 )
 
+# Overnight flight: departs 22:00, arrives 01:30 next day
+BCD_EMAIL_BODY_OVERNIGHT = (
+    "Flug - Frankfurt → New York\n"
+    "LH400 (Economy)\n"
+    "Lufthansa\n"
+    "LH Buchungsreferenz: XYZ789\n"
+    "Abreise:\n"
+    "Frankfurt am Main\n"
+    "FRA, Terminal 1\n"
+    "2024-01-15\n"
+    "22:00\n"
+    "Ankunft:\n"
+    "New York JFK\n"
+    "JFK, Terminal 1(International)\n"
+    "2024-01-15\n"
+    "01:30\n"
+    "Fluggerät:\n"
+    "Boeing 747\n"
+    "Sitzplatz:\n"
+    "30A\n"
+    "\n"
+    "15 Jan 2024 LH400 FRA JFK 22:00 01:30 Economy XYZ789\n"
+)
+
 
 class TestExtractFlightInfo:
     def test_returns_none_for_empty_body(self):
@@ -128,6 +152,23 @@ class TestExtractFlightInfo:
     def test_aircraft(self):
         flights = daemon.extract_flight_info(BCD_EMAIL_BODY)
         assert "Airbus A320" in flights[0]["aircraft"]
+
+
+class TestExtractFlightInfoOvernight:
+    def test_overnight_arrival_date_advances_by_one_day(self):
+        flights = daemon.extract_flight_info(BCD_EMAIL_BODY_OVERNIGHT)
+        assert flights is not None
+        assert flights[0]["arrivalTime"].startswith("2024-01-16")
+
+    def test_overnight_departure_date_unchanged(self):
+        flights = daemon.extract_flight_info(BCD_EMAIL_BODY_OVERNIGHT)
+        assert flights is not None
+        assert flights[0]["departureTime"].startswith("2024-01-15")
+
+    def test_overnight_arrival_time_correct(self):
+        flights = daemon.extract_flight_info(BCD_EMAIL_BODY_OVERNIGHT)
+        assert flights is not None
+        assert flights[0]["arrivalTime"] == "2024-01-16T01:30:00"
 
 
 # ── build_imap_search_query ──────────────────────────────────────────────────
