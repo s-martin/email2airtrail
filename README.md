@@ -2,275 +2,187 @@
 
 ![GitHub Container Registry](https://img.shields.io/badge/Container%20Registry-ghcr.io-blue) [![Tests](https://github.com/s-martin/email2airtrail/actions/workflows/tests.yml/badge.svg)](https://github.com/s-martin/email2airtrail/actions/workflows/tests.yml) [![CodeQL](https://github.com/s-martin/email2airtrail/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/s-martin/email2airtrail/actions/workflows/github-code-scanning/codeql)
 
-A **Docker-based daemon** that monitors an IMAP inbox for flight information emails and inserts them into an **[AirTrail](https://github.com/johanohly/AirTrail)** instance. 
+A **Docker-based daemon** that monitors an IMAP inbox for flight information emails and inserts them into an **[AirTrail](https://github.com/johanohly/AirTrail)** instance.
 
 ## Features
 
 - **Email Monitoring**: Continuously checks an IMAP inbox for new emails from configured senders.
-- **Flight Information Extraction**: Extract flight details such as flight number, departure/arrival times, airport codes, class, booking reference, aircraft, and seat from emails.
+- **Flight Information Extraction**: Extracts flight details such as flight number, departure/arrival times, airport codes, class, booking reference, aircraft, and seat from emails.
 - **AirTrail Integration**: Imports extracted flight data to an AirTrail instance using its API.
 - **Duplicate Check**: Ensures that the same flight is not inserted multiple times.
-- **Configurable Senders**: Allows monitoring emails from multiple senders.
-- **Dynamic Pattern Loading**: Supports different email formats by loading the appropriate regex pattern.
+- **Configurable Senders**: Monitors emails from multiple senders.
+- **Dynamic Pattern Loading**: Supports different email formats by loading the appropriate regex pattern at runtime.
 
 ## Prerequisites
 
-Before you begin, ensure you have the following:
-
 - **Docker** and **Docker Compose** installed on your system.
 - **IMAP Access**: Your email account must support IMAP access.
-- **AirTrail Instance**: You need access to an AirTrail instance with a valid API key.
+- **AirTrail Instance**: Access to an AirTrail instance with a valid API key.
 
-## Installation
-
-### 1. Clone or Download the Project
-
-Clone the repository or download the project files to your local machine:
-
-```bash
-git clone https://github.com/s-martin/email2airtrail
-```
-
-### 2. Download the Compose File and Example Environment
-
-If you want to fetch the example compose file and environment template directly from GitHub, you can use:
-
-```bash
-wget -O docker-compose.yml https://raw.githubusercontent.com/s-martin/email2airtrail/main/docker-compose.yml
-wget -O example.env https://raw.githubusercontent.com/s-martin/email2airtrail/main/example.env
-mv example.env .env
-```
-
-### 3. Project Structure
-
-The project has the following structure:
+## Project Structure
 
 ```text
-airtrail-daemon/
+email2airtrail/
 ├── docker-compose.yml    # Docker Compose configuration
 ├── Dockerfile            # Dockerfile for building the daemon image
 ├── requirements.txt      # Python dependencies
-├── .env                  # Environment variables
-├── config.py             # Configuration settings
+├── example.env           # Example environment variable file
+├── config.py             # Loads and exposes configuration from environment variables
 ├── daemon.py             # Main daemon script
-├── logs/                 # Directory for log files
-└── pattern/             # Directory for regex patterns
+├── logs/                 # Directory for log files (created at runtime)
+└── pattern/              # Directory for email regex patterns
     ├── __init__.py       # Dynamic pattern loading
-    ├── bcd_travel.py     # Regex pattern for BCD Travel emails
-    └── ryanair.py        # Regex pattern for Ryanair emails (example)
+    ├── bcd_travel.py     # Regex patterns for BCD Travel emails
+    └── ryanair.py        # Regex patterns for Ryanair emails
 ```
 
-### 3. Configure Environment Variables
+## Installation
 
-Edit the .env file to configure the daemon according to your environment. Here is an example configuration:
+### Option A: Use the prebuilt image from GitHub Container Registry (recommended)
+
+1. Download the Docker Compose file and the example environment template:
+
+   ```bash
+   wget -O docker-compose.yml https://raw.githubusercontent.com/s-martin/email2airtrail/main/docker-compose.yml
+   wget -O .env https://raw.githubusercontent.com/s-martin/email2airtrail/main/example.env
+   ```
+
+2. Edit `.env` with your settings (see [Configuration](#configuration) below).
+
+3. Start the daemon:
+
+   ```bash
+   docker compose up -d
+   ```
+
+### Option B: Build from source
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/s-martin/email2airtrail
+   cd email2airtrail
+   ```
+
+2. Copy the example environment file and edit it:
+
+   ```bash
+   cp example.env .env
+   ```
+
+3. Build and start the container:
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+## Configuration
+
+Edit the `.env` file to match your environment:
 
 ```ini
-# Email Configuration (IMAP)
-
-IMAP_SERVER=imap.email.com
+# Email configuration (IMAP)
+IMAP_SERVER=imap.example.com
 IMAP_PORT=993
 EMAIL_ADDRESS=your@email.com
 EMAIL_PASSWORD=your-password
 
-# AirTrail Configuration
-
+# AirTrail configuration
 AIRTRAIL_API_URL=http://your-airtrail-instance:3000/api/flights
 AIRTRAIL_API_KEY=your-api-key
 
-# Daemon Settings
-
+# Daemon settings
 CHECK_INTERVAL_MINUTES=10
 
-# Pattern Configuration (Default: bcd_travel)
-
+# Pattern configuration (name of a file in the pattern/ directory, without .py)
 FLIGHT_PATTERN_FILE=bcd_travel
 
-# Email Senders (comma-separated)
-
+# Email senders to monitor (comma-separated)
 EMAIL_SENDERS=info@bcdtravel.de,bcdtravel@example.com
 ```
 
-#### Environment Variables Description
+### Environment Variables
 
 | Variable | Description |
 | -------- | ----------- |
-| IMAP_SERVER | The IMAP server address for your email provider. |
-| IMAP_PORT | The port for IMAP access (default: 993 for SSL). |
-| EMAIL_ADDRESS | Your email address. |
-| EMAIL_PASSWORD | Your email password or app-specific password. |
-| AIRTRAIL_API_URL | The URL of your AirTrail API endpoint. |
-| AIRTRAIL_API_KEY | The API key for accessing your AirTrail instance. |
-| CHECK_INTERVAL_MINUTES | The interval in minutes for checking new emails. |
-| FLIGHT_PATTERN_FILE | The name of the pattern file in the patterns/ directory. |
-| EMAIL_SENDERS | Comma-separated list of email senders to monitor. |
+| `IMAP_SERVER` | IMAP server address for your email provider. |
+| `IMAP_PORT` | IMAP port (default: `993` for SSL). |
+| `EMAIL_ADDRESS` | Your email address. |
+| `EMAIL_PASSWORD` | Your email password or app-specific password. |
+| `AIRTRAIL_API_URL` | URL of your AirTrail API endpoint. |
+| `AIRTRAIL_API_KEY` | API key for your AirTrail instance. |
+| `CHECK_INTERVAL_MINUTES` | How often (in minutes) to check for new emails. |
+| `FLIGHT_PATTERN_FILE` | Filename (without `.py`) of the pattern module in `pattern/`. |
+| `EMAIL_SENDERS` | Comma-separated list of sender addresses to monitor. |
 
 ## Usage
 
-### 1. Build and Start the Docker Container
-
-To build and start the Docker container, run the following command in the project directory:
+### Start the daemon
 
 ```bash
-docker-compose up -d --build
+docker compose up -d
 ```
 
-The --build flag ensures that the Docker image is rebuilt.
-The -d flag runs the container in detached mode (in the background).
-
-### 1a. Use a prebuilt image from GitHub Container Registry
-
-If you want to run the published image instead of building locally, use:
+### View logs
 
 ```bash
-docker pull ghcr.io/s-martin/email2airtrail:latest
-docker run --rm -d --name email2airtrail ghcr.io/s-martin/email2airtrail:latest
-```
-
-Example Compose file using the published image:
-
-```yaml
-services:
-  airtrail-daemon:
-    image: ghcr.io/s-martin/email2airtrail:latest
-    restart: unless-stopped
-    env_file:
-      - .env
-    volumes:
-      - ./logs:/app/logs
-```
-
-You can also push the image manually with:
-
-```bash
-docker build -t ghcr.io/s-martin/email2airtrail:latest .
-docker push ghcr.io/s-martin/email2airtrail:latest
-```
-
-### 2. Check Logs
-
-Logs are stored in the logs/daemon.log file. You can view them in real-time using:
-
-```bash
+# From the host (log file is mounted to ./logs/)
 tail -f logs/daemon.log
+
+# From Docker
+docker logs -f email2airtrail
 ```
 
-Or directly from the Docker container:
+### Stop the daemon
 
 ```bash
-docker logs -f email2airtrail_email2airtrail_1
+docker compose down
 ```
 
-### 3. Stop the Daemon
+## Adding Support for a New Email Format
 
-To stop the daemon, use:
+The daemon uses regex patterns to extract flight data from email text. Each email provider has its own pattern module in the `pattern/` directory.
 
-```bash
-docker-compose down
-```
+1. Create a new file in `pattern/`, e.g. `pattern/lufthansa.py`, and define the required patterns:
 
-## Customization
+   ```python
+   import re
 
-### 1. Adjust Regex Patterns
+   FLIGHT_BLOCK_PATTERN = re.compile(
+       r"<your regex for a flight block>"
+   )
 
-The daemon uses regex patterns to extract flight information from emails. If your emails have a different format, you can adjust the patterns in the patterns/ directory.
-Example: Adding a New Pattern
+   TABLE_ROW_PATTERN = re.compile(
+       r"<your regex for individual table rows>"
+   )
+   ```
 
-Create a new file in the patterns/ directory, e.g., lufthansa.py.
-Define the FLIGHT_BLOCK_PATTERN and TABLE_ROW_PATTERN for the new email format.
+2. Set `FLIGHT_PATTERN_FILE=lufthansa` in your `.env` file.
 
-TODO
+3. Restart the daemon:
 
-```python
-import re
-
-FLIGHT_BLOCK_PATTERN = re.compile(
-    r"Your regex pattern for flight blocks"
-)
-
-TABLE_ROW_PATTERN = re.compile(
-    r"Your regex pattern for table rows"
-)
-```
-
-Update the .env file to use the new pattern:
-
-```ini
-FLIGHT_PATTERN_FILE=lufthansa
-```
-
-### 2. Add Multiple Email Senders
-
-To monitor emails from multiple senders, add their email addresses to the EMAIL_SENDERS variable in the .env file:
-
-```ini
-EMAIL_SENDERS=sender1@example.com,sender2@example.com,sender3@example.com
-```
-
-#### 3. Adjust Date and Time Format
-
-If your emails use a different date format (e.g., 26. Aug. 2026 instead of 26 Aug 2026), adjust the datetime.strptime format in the daemon.py file:
-
-```python
-departure_datetime = datetime.strptime(
-    f"{flight_info['date']} {flight_info['departure_time']}",
-    "%d. %b. %Y %H:%M"  # Example for "26. Aug. 2026 10:15"
-).isoformat()
-```
-
-## File Descriptions
-
-### docker-compose.yml
-
-Defines the Docker Compose configuration to build and run the daemon as a service.
-
-### Dockerfile
-
-Contains instructions to build the Docker image for the daemon, including installing dependencies and setting up the environment.
-
-### requirements.txt
-
-Lists the Python dependencies required for the daemon.
-
-### config.py
-
-Loads environment variables and provides a configuration class for the daemon.
-
-### daemon.py
-
-The main script for the daemon. It:
-
-- Connects to the IMAP server.
-- Fetches and processes new emails.
-- Extracts flight information using regex patterns.
-- Sends flight data to the AirTrail API.
-- Marks processed emails as read.
-patterns/__init__.py
-- Dynamically loads the configured regex pattern for flight information extraction.
-
-### pattern/bcd_travel.py
-
-Contains regex patterns for extracting flight information from BCD Travel emails.
-
-### pattern/ryanair.py
-
-Contains regex patterns for extracting flight information from Ryanair emails (example).
+   ```bash
+   docker compose restart
+   ```
 
 ## Troubleshooting
 
-TODO
-
 | Issue | Solution |
 | ----- | -------- |
-| Docker container fails to start | Check the .env file for missing or incorrect values. Ensure Docker is running. |
-| No emails found | Verify IMAP credentials and the EMAIL_SENDERS configuration. |
-| Flight data not extracted | Adjust the regex pattern in the appropriate pattern file to match your email format. |
-| AirTrail API errors | Verify the AIRTRAIL_API_URL and AIRTRAIL_API_KEY in the .env file. |
-| Date or time parsing errors | Adjust the datetime.strptime format in daemon.py to match your email's date format. |
-| Permission issues with logs | Ensure the logs/ directory exists and has write permissions. |
+| Container fails to start | Check `.env` for missing or incorrect values. Ensure Docker is running. |
+| No emails found | Verify IMAP credentials and `EMAIL_SENDERS` configuration. |
+| Flight data not extracted | Adjust the regex patterns in the relevant `pattern/` file to match your email format. |
+| AirTrail API errors | Verify `AIRTRAIL_API_URL` and `AIRTRAIL_API_KEY` in `.env`. |
+| Date/time parsing errors | Check that the `datetime.strptime` format in `daemon.py` matches the date format in your emails. |
+| Permission issues with logs | Ensure the `logs/` directory exists and has write permissions. |
 
-## Contributions
+## Contributing
 
-Contributions to this project are welcome! If you have suggestions, improvements, or bug fixes, feel free to create a pull request or open an issue.
+Contributions are welcome! Feel free to open an issue or submit a pull request.
+
+## License
+
+See [LICENSE](LICENSE).
 
 ## Contact
 
