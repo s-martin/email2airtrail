@@ -37,7 +37,7 @@ If you want to fetch the example compose file and environment template directly 
 
 ```bash
 wget -O docker-compose.yml https://raw.githubusercontent.com/s-martin/email2airtrail/main/docker-compose.yml
-wget -O eample.env https://raw.githubusercontent.com/s-martin/email2airtrail/main/example.env
+wget -O example.env https://raw.githubusercontent.com/s-martin/email2airtrail/main/example.env
 mv example.env .env
 ```
 

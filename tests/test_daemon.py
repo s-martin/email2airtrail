@@ -298,3 +298,28 @@ class TestSendToAirtrail:
             headers = mock_post.call_args[1]["headers"]
         expected = f"Bearer {daemon.Config.AIRTRAIL_API_KEY}"
         assert headers.get("Authorization") == expected
+
+
+# ── timeout parameter ────────────────────────────────────────────────────────
+
+class TestRequestTimeouts:
+    """Verify that HTTP calls include a timeout parameter."""
+
+    def _make_response(self, status_code, json_data=None):
+        resp = MagicMock()
+        resp.status_code = status_code
+        resp.json.return_value = json_data or []
+        resp.text = ""
+        return resp
+
+    def test_flight_exists_passes_timeout(self):
+        with patch("daemon.requests.get", return_value=self._make_response(200, [])) as mock_get:
+            daemon.flight_exists("LH100", "2024-01-15T10:30:00")
+            _, kwargs = mock_get.call_args
+        assert "timeout" in kwargs
+
+    def test_send_to_airtrail_passes_timeout(self):
+        with patch("daemon.requests.post", return_value=self._make_response(201)) as mock_post:
+            daemon.send_to_airtrail(SAMPLE_FLIGHT)
+            _, kwargs = mock_post.call_args
+        assert "timeout" in kwargs

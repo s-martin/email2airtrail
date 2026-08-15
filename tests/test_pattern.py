@@ -179,3 +179,29 @@ class TestRyanairPattern:
 
     def test_no_match_for_unrelated_text(self):
         assert FLIGHT_INFO_PATTERN.search("Hello, world!") is None
+
+
+# ── pattern loader fallback warning ─────────────────────────────────────────
+
+class TestPatternLoaderWarning:
+    """Verify that a warning is logged when the configured pattern module is missing."""
+
+    def test_get_flight_info_pattern_warns_on_missing_module(self, caplog):
+        import logging
+        from unittest.mock import patch
+        import pattern as pattern_pkg
+        with patch("pattern.Config") as mock_cfg:
+            mock_cfg.FLIGHT_PATTERN_FILE = "nonexistent_module"
+            with caplog.at_level(logging.WARNING, logger="pattern"):
+                pattern_pkg.get_flight_info_pattern()
+        assert any("nonexistent_module" in r.message for r in caplog.records)
+
+    def test_get_table_row_pattern_warns_on_missing_module(self, caplog):
+        import logging
+        from unittest.mock import patch
+        import pattern as pattern_pkg
+        with patch("pattern.Config") as mock_cfg:
+            mock_cfg.FLIGHT_PATTERN_FILE = "nonexistent_module"
+            with caplog.at_level(logging.WARNING, logger="pattern"):
+                pattern_pkg.get_table_row_pattern()
+        assert any("nonexistent_module" in r.message for r in caplog.records)
