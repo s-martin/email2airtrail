@@ -133,8 +133,14 @@ def build_imap_search_query():
     if not Config.EMAIL_SENDERS:
         return 'UNSEEN'
 
-    senders = ' OR '.join(f'FROM "{sender.strip()}"' for sender in Config.EMAIL_SENDERS)
-    return f'UNSEEN ({senders})'
+    from_clauses = [f'FROM "{sender.strip()}"' for sender in Config.EMAIL_SENDERS]
+    if len(from_clauses) == 1:
+        return f'UNSEEN ({from_clauses[0]})'
+    # IMAP OR is binary; nest pairs right-to-left for 3+ operands
+    result = from_clauses[-1]
+    for clause in reversed(from_clauses[:-1]):
+        result = f'OR ({clause}) ({result})'
+    return f'UNSEEN ({result})'
 
 
 def fetch_emails():

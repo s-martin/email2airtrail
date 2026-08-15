@@ -148,9 +148,12 @@ class TestBuildImapSearchQuery:
     def test_multiple_senders_uses_or(self):
         with patch.object(daemon.Config, "EMAIL_SENDERS", ["a@a.com", "b@b.com"]):
             result = daemon.build_imap_search_query()
-        assert "OR" in result
-        assert 'FROM "a@a.com"' in result
-        assert 'FROM "b@b.com"' in result
+        assert result == 'UNSEEN (OR (FROM "a@a.com") (FROM "b@b.com"))'
+
+    def test_three_senders_uses_nested_or(self):
+        with patch.object(daemon.Config, "EMAIL_SENDERS", ["a@a.com", "b@b.com", "c@c.com"]):
+            result = daemon.build_imap_search_query()
+        assert result == 'UNSEEN (OR (FROM "a@a.com") (OR (FROM "b@b.com") (FROM "c@c.com")))'
 
     def test_strips_whitespace_from_sender(self):
         with patch.object(daemon.Config, "EMAIL_SENDERS", [" travel@bcd.com "]):
