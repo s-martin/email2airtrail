@@ -15,4 +15,3 @@ This triggers the release workflow and publishes images such as:
 ghcr.io/s-martin/email2airtrail:v1.0.0
 ghcr.io/s-martin/email2airtrail:latest
 ```
-
