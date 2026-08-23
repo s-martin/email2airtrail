@@ -1,5 +1,6 @@
 services:
   email2airtrail:
+    image: ghcr.io/s-martin/email2airtrail:latest
     build: .
     restart: unless-stopped
     env_file:
