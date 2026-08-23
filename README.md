@@ -130,7 +130,7 @@ docker compose up -d
 tail -f logs/daemon.log
 
 # From Docker
-docker logs -f email2airtrail
+docker logs -f email2airtrail-email2airtrail-1
 ```
 
 ### Stop the daemon
