@@ -111,16 +111,27 @@ def flight_exists(flight_number, departure_time):
         )
         if response.status_code == 200:
             flights = response.json()
-            return any(
+            exists = any(
                 flight.get("flightNumber") == flight_number and
                 flight.get("departureTime") == departure_time
                 for flight in flights
             )
+            logger.debug(
+                "Duplicate check for flight %s returned exists=%s.",
+                flight_number,
+                exists,
+            )
+            return exists
         else:
-            logger.error(f"Error querying AirTrail: {response.text}")
+            logger.error(
+                "Error querying AirTrail for flight %s: HTTP %s - %s",
+                flight_number,
+                response.status_code,
+                response.text,
+            )
             return None
     except Exception as e:
-        logger.error(f"API error during duplicate check: {e}")
+        logger.exception("API error during duplicate check for flight %s: %s", flight_number, e)
         return None
 
 
@@ -139,14 +150,20 @@ def send_to_airtrail(flight_data):
         )
         if response.status_code in (200, 201):
             logger.info(
-                f"Flight {flight_data['flightNumber']} successfully inserted into AirTrail."
+                "Flight %s successfully inserted into AirTrail.",
+                flight_data["flightNumber"],
             )
             return True
         else:
-            logger.error(f"Error inserting into AirTrail: {response.text}")
+            logger.error(
+                "Error inserting flight %s into AirTrail: HTTP %s - %s",
+                flight_data["flightNumber"],
+                response.status_code,
+                response.text,
+            )
             return False
     except Exception as e:
-        logger.error(f"API error: {e}")
+        logger.exception("API error while inserting flight %s: %s", flight_data["flightNumber"], e)
         return False
 
 
@@ -167,7 +184,10 @@ def build_imap_search_query():
 
 def fetch_emails():
     """Fetch new emails and process them."""
+    processed_emails = 0
+    processed_flights = 0
     try:
+        logger.info("Checking inbox %s:%s for unread flight emails.", Config.IMAP_SERVER, Config.IMAP_PORT)
         mail = imaplib.IMAP4_SSL(Config.IMAP_SERVER, Config.IMAP_PORT)
         mail.login(Config.EMAIL_ADDRESS, Config.EMAIL_PASSWORD)
         mail.select("inbox")
@@ -180,10 +200,12 @@ def fetch_emails():
             return
 
         email_ids = messages[0].split()
+        logger.info("Found %d unread email(s) to process.", len(email_ids))
         for email_id in email_ids:
             # Fetch email
             status, msg_data = mail.fetch(email_id, "(RFC822)")
             if status != "OK":
+                logger.warning("Could not fetch email %s; IMAP status was %s.", email_id, status)
                 continue
 
             raw_email = msg_data[0][1]
@@ -207,10 +229,11 @@ def fetch_emails():
             # Extract flight information
             flights = extract_flight_info(email_body)
             if flights:
-                logger.info(f"Flight info found: {flights}")
+                logger.info("Found %d flight(s) in email %s.", len(flights), email_id)
 
                 all_succeeded = True
                 for flight in flights:
+                    processed_flights += 1
                     # Check whether the flight already exists
                     already_exists = flight_exists(
                         flight["flightNumber"], flight["departureTime"]
@@ -221,29 +244,52 @@ def fetch_emails():
                         )
                         all_succeeded = False
                     elif already_exists:
-                        logger.info(f"Flight {flight['flightNumber']} already exists in AirTrail.")
+                        logger.info(
+                            "Flight %s from email %s already exists in AirTrail.",
+                            flight["flightNumber"],
+                            email_id,
+                        )
                     else:
                         # Insert the flight into AirTrail
                         if send_to_airtrail(flight):
-                            logger.info(f"Flight {flight['flightNumber']} inserted into AirTrail.")
+                            logger.info(
+                                "Flight %s from email %s inserted into AirTrail.",
+                                flight["flightNumber"],
+                                email_id,
+                            )
                         else:
-                            logger.error(f"Flight {flight['flightNumber']} could not be inserted into AirTrail.")
+                            logger.error(
+                                "Flight %s from email %s could not be inserted into AirTrail.",
+                                flight["flightNumber"],
+                                email_id,
+                            )
                             all_succeeded = False
 
                 if all_succeeded:
                     # Mark the email as read only after all flights have been processed
                     mail.store(email_id, '+FLAGS', '\\Seen')
-                    logger.info("Email marked as read.")
+                    processed_emails += 1
+                    logger.info("Email %s marked as read.", email_id)
+            else:
+                logger.info("No flight information found in email %s.", email_id)
 
         mail.close()
         mail.logout()
+        logger.info(
+            "Inbox check complete: %d email(s) marked as read, %d flight(s) examined.",
+            processed_emails,
+            processed_flights,
+        )
     except Exception as e:
-        logger.error(f"Email error: {e}")
+        logger.exception("Email processing error: %s", e)
 
 
 def run_daemon():
     """Run the daemon."""
-    logger.info(f"Daemon started. Monitoring emails every {Config.CHECK_INTERVAL_MINUTES} minutes...")
+    logger.info(
+        "Starting inbox check; next scheduled check is in %d minute(s).",
+        Config.CHECK_INTERVAL_MINUTES,
+    )
     fetch_emails()
 
 
