@@ -32,6 +32,20 @@ def extract_text_from_html(html):
     return soup.get_text()
 
 
+def decode_email_part(part):
+    """Decode an email part using its declared charset."""
+    payload = part.get_payload(decode=True)
+    if payload is None:
+        return ""
+
+    charset = part.get_content_charset() or "utf-8"
+    try:
+        return payload.decode(charset, errors="replace")
+    except LookupError:
+        logger.warning("Unknown email charset %s; falling back to UTF-8.", charset)
+        return payload.decode("utf-8", errors="replace")
+
+
 def extract_flight_info(email_body):
     """Extract flight information from an email body."""
     # Search for flight blocks
@@ -87,7 +101,7 @@ def extract_flight_info(email_body):
 
 
 def flight_exists(flight_number, departure_time):
-    """Check whether the flight already exists in AirTrail."""
+    """Check whether the flight exists; return None when the check fails."""
     headers = {"Authorization": f"Bearer {Config.AIRTRAIL_API_KEY}"}
     try:
         response = requests.get(
@@ -104,10 +118,10 @@ def flight_exists(flight_number, departure_time):
             )
         else:
             logger.error(f"Error querying AirTrail: {response.text}")
-            return False
+            return None
     except Exception as e:
         logger.error(f"API error during duplicate check: {e}")
-        return False
+        return None
 
 
 def send_to_airtrail(flight_data):
@@ -183,12 +197,12 @@ def fetch_emails():
                     if content_type == "text/plain":
                         email_body += part.get_payload(decode=True).decode()
                     elif content_type == "text/html":
-                        email_body += extract_text_from_html(part.get_payload(decode=True).decode())
+                        email_body += extract_text_from_html(decode_email_part(part))
             else:
                 if email_message.get_content_type() == "text/html":
-                    email_body = extract_text_from_html(email_message.get_payload(decode=True).decode())
+                    email_body = extract_text_from_html(decode_email_part(email_message))
                 else:
-                    email_body = email_message.get_payload(decode=True).decode()
+                    email_body = decode_email_part(email_message)
 
             # Extract flight information
             flights = extract_flight_info(email_body)
@@ -198,7 +212,15 @@ def fetch_emails():
                 all_succeeded = True
                 for flight in flights:
                     # Check whether the flight already exists
-                    if flight_exists(flight["flightNumber"], flight["departureTime"]):
+                    already_exists = flight_exists(
+                        flight["flightNumber"], flight["departureTime"]
+                    )
+                    if already_exists is None:
+                        logger.error(
+                            f"Could not verify whether flight {flight['flightNumber']} exists."
+                        )
+                        all_succeeded = False
+                    elif already_exists:
                         logger.info(f"Flight {flight['flightNumber']} already exists in AirTrail.")
                     else:
                         # Insert the flight into AirTrail

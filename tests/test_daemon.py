@@ -55,6 +55,22 @@ class TestExtractTextFromHtml:
         assert "Frankfurt" in result
 
 
+class TestDecodeEmailPart:
+    def test_uses_declared_charset(self):
+        part = MagicMock()
+        part.get_payload.return_value = "Grüße".encode("iso-8859-1")
+        part.get_content_charset.return_value = "iso-8859-1"
+
+        assert daemon.decode_email_part(part) == "Grüße"
+
+    def test_replaces_invalid_bytes(self):
+        part = MagicMock()
+        part.get_payload.return_value = b"invalid \xff byte"
+        part.get_content_charset.return_value = "utf-8"
+
+        assert "\ufffd" in daemon.decode_email_part(part)
+
+
 # ── extract_flight_info ──────────────────────────────────────────────────────
 
 BCD_EMAIL_BODY = (
@@ -222,13 +238,13 @@ class TestFlightExists:
         with patch("daemon.requests.get", return_value=self._make_response(200, flights)):
             assert daemon.flight_exists("LH100", "2024-01-15T10:30:00") is False
 
-    def test_returns_false_on_non_200(self):
+    def test_returns_none_on_non_200(self):
         with patch("daemon.requests.get", return_value=self._make_response(500, [])):
-            assert daemon.flight_exists("LH100", "2024-01-15T10:30:00") is False
+            assert daemon.flight_exists("LH100", "2024-01-15T10:30:00") is None
 
-    def test_returns_false_on_exception(self):
+    def test_returns_none_on_exception(self):
         with patch("daemon.requests.get", side_effect=Exception("network error")):
-            assert daemon.flight_exists("LH100", "2024-01-15T10:30:00") is False
+            assert daemon.flight_exists("LH100", "2024-01-15T10:30:00") is None
 
     def test_empty_response_list(self):
         with patch("daemon.requests.get", return_value=self._make_response(200, [])):
