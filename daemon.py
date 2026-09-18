@@ -195,7 +195,7 @@ def fetch_emails():
                 for part in email_message.walk():
                     content_type = part.get_content_type()
                     if content_type == "text/plain":
-                        email_body += part.get_payload(decode=True).decode()
+                        email_body += decode_email_part(part)
                     elif content_type == "text/html":
                         email_body += extract_text_from_html(decode_email_part(part))
             else:

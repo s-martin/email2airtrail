@@ -70,6 +70,14 @@ class TestDecodeEmailPart:
 
         assert "\ufffd" in daemon.decode_email_part(part)
 
+    def test_multipart_plain_text_uses_declared_charset(self):
+        part = MagicMock()
+        part.get_content_type.return_value = "text/plain"
+        part.get_payload.return_value = "Grüße".encode("iso-8859-1")
+        part.get_content_charset.return_value = "iso-8859-1"
+
+        assert daemon.decode_email_part(part) == "Grüße"
+
 
 # ── extract_flight_info ──────────────────────────────────────────────────────
 

@@ -14,7 +14,8 @@ COPY pattern/ ./pattern/
 RUN mkdir -p logs
 
 # Load environment variables
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONUNBUFFERED=1 \
+    CHECK_INTERVAL_MINUTES=10
 
 HEALTHCHECK --interval=60s --timeout=10s --start-period=5s --retries=3 \
     CMD test "$(find /app/logs/daemon.log -mmin -$((CHECK_INTERVAL_MINUTES + 5)) 2>/dev/null)" != ""
